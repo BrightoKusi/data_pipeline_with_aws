@@ -91,6 +91,10 @@ renamed_columns2 = {'callID':'call_id', 'callDurationInSeconds' : 'call_duration
 df_call_details = df_call_details.withColumnsRenamed(renamed_columns2)
 
 
+#========== Writing transformed files to csv
 
+df_call_logs.write.csv('transformed_call_logs', header = True)
+
+df_call_details.write.csv('transformed_call_details', header = True)
 
 
