@@ -98,3 +98,53 @@ df_call_logs.write.csv('transformed_call_logs', header = True)
 df_call_details.write.csv('transformed_call_details', header = True)
 
 
+## EXPORT TRANSFORMED FILES TO POSTGRESQL
+# Create a database 'weserve' in postgresql
+
+config = configparser.ConfigParser()
+config.read('.env')
+
+from utils.helper import create_dbconnection
+from sql_statements.create import call_log, call_details
+
+['DB_CONN']
+host = config['DB_CONN']['host']
+user = config['DB_CONN']['user']
+password = config['DB_CONN']['password']
+database = config['DB_CONN']['database']
+
+
+#=========Create a connection to the WESERVE database in Postgresql
+conn = create_dbconnection(host,user,password,database)
+
+#=========Create tables in the database
+cursor = conn.cursor()  # create cursor connection
+
+cursor.execute(call_log) #======call_log table
+conn.commit()
+
+cursor.execute(call_details)#======call_details table
+conn.commit()
+
+cursor.close()  #======close cursor
+conn.close()   #=====close connection
+
+
+#========== Use sqlalchemy to export data to weserve database
+import sqlalchemy as sa
+import pandas as pd
+from sqlalchemy import create_engine
+
+#===== create connection to database
+engine = sa.create_engine(f'postgresql://{user}:{password}@{host}:5432/{database}')
+
+
+df = pd.read_csv('call_logs.csv') #======create call_log dataframe  
+df.to_sql('call_log', engine, if_exists='append', index = False)  #=====export to postgresql
+
+
+df = pd.read_csv('call_details.csv') #========create call_details dataframe
+df.to_sql('call_details', engine, if_exists='append', index = False) #=====export to postgresql
+
+
+
