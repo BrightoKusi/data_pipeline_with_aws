@@ -1,15 +1,28 @@
 #USING APACHE SPARK 
-from pyspark.sql import SparkSession #==== Create a spark session 
-spark = SparkSession.builder.appName('Calllogs').getOrCreate()
 
-#========STARTING WITH THE FIRST DATASET 'CALL LOG'
-df_call_logs = spark.read.csv('call log.csv', header=True)  #======Read the call log data set
-df_call_logs.show(5)  #=======Display data
+import sqlalchemy as sa
+import pandas as pd
 
-#======Import modules
+from sqlalchemy import create_engine
+from utils.helper import create_dbconnection
+from sql_statements.create import call_log, call_details
+
+
+from pyspark.sql import SparkSession 
 from pyspark.sql.types import *
 from pyspark.sql import functions as F
 from pyspark.sql.functions import *
+
+config = configparser.ConfigParser()
+config.read('.env')
+
+
+#========STARTING WITH THE FIRST DATASET 'CALL LOG'
+spark = SparkSession.builder.appName('Calllogs').getOrCreate()
+df_call_logs = spark.read.csv('call log.csv', header=True)  #======Read the call log data set
+df_call_logs.show(5)  #=======Display data
+
+
 
 #======Data exploration
 df_call_logs.printSchema()  #=====View columns and data types
@@ -101,12 +114,6 @@ df_call_details.write.csv('transformed_call_details', header = True)
 ## EXPORT TRANSFORMED FILES TO POSTGRESQL
 # Create a database 'weserve' in postgresql
 
-config = configparser.ConfigParser()
-config.read('.env')
-
-from utils.helper import create_dbconnection
-from sql_statements.create import call_log, call_details
-
 ['DB_CONN']
 host = config['DB_CONN']['host']
 user = config['DB_CONN']['user']
@@ -131,10 +138,6 @@ conn.close()   #=====close connection
 
 
 #========== Use sqlalchemy to export data to weserve database
-import sqlalchemy as sa
-import pandas as pd
-from sqlalchemy import create_engine
-
 #===== create connection to database
 engine = sa.create_engine(f'postgresql://{user}:{password}@{host}:5432/{database}')
 
